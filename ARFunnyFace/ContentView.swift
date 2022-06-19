@@ -10,6 +10,7 @@ import RealityKit
 import ARKit
 
 var arView: ARView!
+var robot: Experience.Robot!
 
 struct ContentView : View {
     
@@ -33,7 +34,7 @@ struct ContentView : View {
                 }
                 Spacer()
                 Button {
-                    self.propId = self.propId >= 2 ? 2 : self.propId + 1
+                    self.propId = self.propId >= 3 ? 3 : self.propId + 1
                 } label: {
                     Image("NextButton").clipShape(Circle())
                 }
@@ -54,13 +55,46 @@ struct ContentView : View {
 struct ARViewContainer: UIViewRepresentable {
     
     @Binding var propId: Int
+    
+    class ARDelegateHandler: NSObject, ARSessionDelegate {
+        
+        var arViewContainer: ARViewContainer
+        
+        init(_ control: ARViewContainer) {
+            arViewContainer = control
+            super.init()
+        }
+        
+        func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+            guard robot != nil else { return }
+            
+            var faceAnchor: ARFaceAnchor?
+            anchors.forEach { anchor in
+                if let anchor = anchor as? ARFaceAnchor {
+                    faceAnchor = anchor
+                }
+            }
+            
+            let blendShapes = faceAnchor?.blendShapes
+            let eyeBlinkLeft = blendShapes?[.eyeBlinkLeft]?.floatValue
+            let eyeBlinkRight = blendShapes?[.eyeBlinkRight]?.floatValue
+        }
+        
+    }
+    
+    func makeCoordinator() -> ARDelegateHandler {
+        ARDelegateHandler(self)
+    }
         
     func makeUIView(context: Context) -> ARView {
         arView = ARView(frame: .zero)
+        arView.session.delegate = context.coordinator
         return arView
     }
     
     func updateUIView(_ uiView: ARView, context: Context) {
+        robot = nil
+        
         uiView.scene.anchors.removeAll()
         let arConfiguration = ARFaceTrackingConfiguration()
         uiView.session.run(arConfiguration, options: [.resetTracking, .removeExistingAnchors])
@@ -77,6 +111,11 @@ struct ARViewContainer: UIViewRepresentable {
         case 2:
             let arAnchor = try! Experience.loadMustache()
             uiView.scene.anchors.append(arAnchor)
+            break
+        case 3:
+            let arAnchor = try! Experience.loadRobot()
+            uiView.scene.anchors.append(arAnchor)
+            robot = arAnchor
             break
         default:
             break
