@@ -78,6 +78,29 @@ struct ARViewContainer: UIViewRepresentable {
             let blendShapes = faceAnchor?.blendShapes
             let eyeBlinkLeft = blendShapes?[.eyeBlinkLeft]?.floatValue
             let eyeBlinkRight = blendShapes?[.eyeBlinkRight]?.floatValue
+            let browInnerUp = blendShapes?[.browInnerUp]?.floatValue
+            let browLeft = blendShapes?[.browDownLeft]?.floatValue
+            let browRight = blendShapes?[.browDownRight]?.floatValue
+            let jawOpen = blendShapes?[.jawOpen]?.floatValue
+            
+            robot.eyeLidL?.orientation = simd_mul(
+                simd_quatf(angle: deg2Rad(-120 + (90 * eyeBlinkLeft!)),
+                           axis: [1, 0, 0]),
+                simd_quatf(angle: deg2Rad((90 * browLeft!) - (30 * browInnerUp!)),
+                           axis: [0, 0, 1]))
+            
+            robot.eyeLidR?.orientation = simd_mul(
+                simd_quatf(angle: deg2Rad(-120 + (90 * eyeBlinkRight!)),
+                           axis: [1, 0, 0]),
+                simd_quatf(angle: deg2Rad((-90 * browRight!) - (-30 * browInnerUp!)),
+                           axis: [0, 0, 1]))
+            
+            robot.jaw?.orientation = simd_quatf(angle: deg2Rad(-100 + (60 * jawOpen!)), axis: [1, 0, 0])
+            
+        }
+        
+        func deg2Rad(_ value: Float) -> Float {
+            return value * .pi / 180
         }
         
     }
