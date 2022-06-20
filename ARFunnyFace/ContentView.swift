@@ -59,6 +59,7 @@ struct ARViewContainer: UIViewRepresentable {
     class ARDelegateHandler: NSObject, ARSessionDelegate {
         
         var arViewContainer: ARViewContainer
+        var isLasersDone = true
         
         init(_ control: ARViewContainer) {
             arViewContainer = control
@@ -96,6 +97,14 @@ struct ARViewContainer: UIViewRepresentable {
                            axis: [0, 0, 1]))
             
             robot.jaw?.orientation = simd_quatf(angle: deg2Rad(-100 + (60 * jawOpen!)), axis: [1, 0, 0])
+            
+            if (self.isLasersDone && jawOpen! > 0.9) {
+                self.isLasersDone = false
+                robot.notifications.showLasers.post()
+                robot.actions.lasersDone.onAction = { _ in
+                    self.isLasersDone = true
+                }
+            }
             
         }
         
